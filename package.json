@@ -1,6 +1,7 @@
 {
   "name": "docbot",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -12,6 +13,7 @@
   "description": "",
   "dependencies": {
     "@octokit/app": "^16.0.1",
+    "@octokit/auth-app": "^8.0.1",
     "@octokit/rest": "^22.0.0",
     "@octokit/webhooks": "^14.1.0",
     "body-parser": "^2.2.0",
