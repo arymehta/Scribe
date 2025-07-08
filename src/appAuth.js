@@ -1,17 +1,14 @@
 import { createAppAuth } from "@octokit/auth-app";
-import dotenv from "dotenv";
-dotenv.config();
-import { Octokit } from "@octokit/rest";
+import { Octokit } from "octokit";
 
-const auth = createAppAuth({
-  appId: process.env.APP_ID,
-  privateKey: process.env.PRIVATE_KEY,
-  clientId: process.env.CLIENT_ID,
-});
-
-const fetchData = async () => {
-  const appAuthentication = await auth({ type: "app" });
-  console.log(appAuthentication);
+export const createOctokitClient = (installationId) => {
+  const octokit = new Octokit({
+    authStrategy: createAppAuth,
+    auth: {
+      appId: process.env.APP_ID,
+      privateKey: process.env.PRIVATE_KEY,
+      installationId: installationId,
+    },
+  });
+  return octokit;
 };
-
-fetchData();
