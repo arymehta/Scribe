@@ -1,7 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
 import "dotenv/config";
-import { commentOnIssue } from "./src/controllers/webhookController";
+import { commentOnIssue } from "./src/controllers/webhookController.js";
 
 const app = express();
 app.use(bodyParser.json());

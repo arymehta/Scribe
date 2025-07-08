@@ -1,6 +1,8 @@
-import { createOctokitClient } from "../appAuth";
+import { createOctokitClient } from "../appAuth.js";
 
 export const commentOnIssue = async (req, res) => {
+  console.log("Req recieved");
+  console.log(req.body);
   const event = req.headers["x-github-event"];
   const action = req.body.action;
 
@@ -24,6 +26,7 @@ export const commentOnIssue = async (req, res) => {
       );
       console.log(res);
     } catch (error) {
+      console.log(error);
       res.status(401).json({ message: "An Error Occured" });
     }
   } else {
