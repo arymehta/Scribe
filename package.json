@@ -21,6 +21,7 @@
     "dotenv": "^17.1.0",
     "express": "^5.1.0",
     "nodemon": "^3.1.10",
-    "octokit": "^5.0.3"
+    "octokit": "^5.0.3",
+    "openai": "^5.8.3"
   }
 }
