@@ -1,15 +1,14 @@
 import express from "express";
 import bodyParser from "body-parser";
 import "dotenv/config";
-import { commentOnIssue, createCommit, detectMergePR } from "./src/controllers/webhookController.js";
+import { RouteWebhookRequest } from "./src/controllers/webhookController.js";
 
 const app = express();
 app.use(bodyParser.json());
 app.use(express.json());
 
-// app.post("/webhook", commentOnIssue);
-// app.post("/webhook", createCommit);
-app.post("/webhook", detectMergePR);
+
+app.post("/webhook", RouteWebhookRequest);
 
 app.get("/", (req, res) => {
   return res.json({ msg: "AM HERE!" });
