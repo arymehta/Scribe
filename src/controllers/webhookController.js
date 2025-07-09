@@ -6,8 +6,8 @@ export const RouteWebhookRequest = async (req, res) => {
 
   try {
     if (event === "issues" && action === "opened") {
-      await commentOnIssue(req, res);
-      await createCommit(req, res);
+      commentOnIssue(req, res);
+      createCommit(req, res);
     } else if (event === "pull_request" && action === "closed") {
       await detectMergePR(req, res);
     }
