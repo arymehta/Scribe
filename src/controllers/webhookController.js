@@ -94,7 +94,7 @@ const createTree = async (octokitClient, owner, repoName, newTreeSha, blobData) 
       base_tree: newTreeSha, // base is the latest commit's tree
       tree: [
         {
-          path: "docs/generated-README.md",
+          path: "README.md",
           mode: "100644",
           type: "blob",
           sha: blobData.sha,
@@ -106,6 +106,7 @@ const createTree = async (octokitClient, owner, repoName, newTreeSha, blobData) 
     console.log("Error Creating Tree");
   }
 };
+// -- createTree followed by createCommit
 
 // Create a pull Request
 const createPR = async (
