@@ -1,6 +1,5 @@
 import { createOctokitClient } from "../appAuth.js";
-import { parseDirectory, parseFileContents, parseMarkdown } from "../utils/parserUtils.js";
-import { llmResponse } from "../utils/parserUtils.js";
+import { getMarkdownContent } from "../utils/parserUtils.js";
 import {
   getBaseBranch,
   getLatestCommitSHA,
@@ -13,56 +12,54 @@ import {
 export const RouteWebhookRequest = async (req, res) => {
   const event = req?.headers["x-github-event"];
   const action = req?.body?.action;
-
   try {
+    const installationId = req?.body?.installation?.id;
+    const octokitClient = createOctokitClient(installationId);
+    const repo = req?.body?.repository;
+    const owner = repo?.owner?.login;
+    const repoName = repo?.name;
+    // console.log(req.body);
     if (event === "issues" && action === "opened") {
-      const docContent = await commentOnIssue(req, res);
-      createCommit(req, res, docContent);
+      await commentOnIssue(req, octokitClient);
+      const docContent = await getMarkdownContent(octokitClient, owner, repoName, "");
+      await createCommit(req, octokitClient, docContent);
     } else if (event === "pull_request" && action === "closed") {
-      await detectMergePR(req, res);
+      await detectMergePR(req, octokitClient);
     }
   } catch (error) {
     console.log(error);
-    res?.status(401)?.json({ message: "An Error Occured" });
   }
 };
 
 // ----------------------MAIN SERVICES------------------------------
-const commentOnIssue = async (req, res) => {
+const defaultCommentMessage = "Hold on!, generating documentation...";
+const commentOnIssue = async (req, octokitClient, commentMessage = defaultCommentMessage) => {
   const event = req?.headers["x-github-event"];
   const action = req?.body?.action;
   if (event === "issues" && action === "opened") {
     const issue = req?.body?.issue;
     const repo = req?.body?.repository;
-    const installationId = req?.body?.installation?.id;
     const owner = repo?.owner?.login;
     const repoName = repo?.name;
     const issueNumber = issue?.number;
-    const octokitClient = createOctokitClient(installationId);
-    const path = "";
+
     try {
-      const results = await parseDirectory(octokitClient, owner, repoName, path);
-      const finalBody = await parseFileContents(results);
-      // console.log("The final Body = ", finalBody);
-      const llmOutput = await llmResponse(finalBody);
-      const finalAnswer = parseMarkdown(llmOutput);
       await octokitClient.rest.issues.createComment({
         owner,
         repo: repoName,
         issue_number: issueNumber,
-        body: "Hold on!, generating documentation...",
+        body: commentMessage,
       });
-      return finalAnswer;
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: "An error occurred." });
     }
   } else {
-    res.status(300).json({ message: "Invalid event." });
+    // res.status(300).json({ message: "Invalid event." });
+    throw new Error("Invalid Action");
   }
 };
 
-const createCommit = async (req, res, docContent) => {
+const createCommit = async (req, octokitClient, docContent) => {
   console.log("Req recieved");
 
   const event = req.headers["x-github-event"];
@@ -71,11 +68,9 @@ const createCommit = async (req, res, docContent) => {
   if (event === "issues" && action === "opened") {
     const issue = req?.body?.issue;
     const repo = req?.body?.repository;
-    const installationId = req?.body?.installation?.id;
     const owner = repo?.owner?.login;
     const repoName = repo?.name;
     const issueNumber = issue?.number;
-    const octokitClient = createOctokitClient(installationId);
 
     try {
       // gets the base branch (main/ master)
@@ -100,7 +95,7 @@ const createCommit = async (req, res, docContent) => {
 
       // Create a commit
       console.log("Commiting on that Tree");
-      const commitMessage = `Closes #${issueNumber} : Creating documentation on branch ${newBranchName}`;
+      const commitMessage = `Issue #${issueNumber} : Creating documentation on branch ${newBranchName}`;
       const { data: newCommit } = await octokitClient.git.createCommit({
         owner,
         repo: repoName,
@@ -126,7 +121,7 @@ const createCommit = async (req, res, docContent) => {
   }
 };
 
-const detectMergePR = async (req, res) => {
+const detectMergePR = async (req, octokitClient) => {
   const event = req?.headers["x-github-event"];
   const action = req?.body?.action;
 
@@ -141,10 +136,8 @@ const detectMergePR = async (req, res) => {
     if (branchRef.startsWith("docbot/docs-")) {
       try {
         const repo = req?.body?.repository;
-        const installationId = req?.body?.installation?.id;
         const owner = repo?.owner?.login;
         const repoName = repo?.name;
-        const octokitClient = createOctokitClient(installationId);
 
         console.log(`PR was ${mergedStatus ? "merged" : "closed without merging"}`);
         console.log(`Branch to delete: ${branchRef}`);
