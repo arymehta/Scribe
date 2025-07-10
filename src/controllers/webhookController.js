@@ -213,7 +213,7 @@ const createCommit = async (req, res, docContent) => {
 
       // Create a commit
       console.log("Commiting on that Tree");
-      const commitMessage = `Issue #${issueNumber} : Creating documentation on branch ${newBranchName}`
+      const commitMessage = `Closes #${issueNumber} : Creating documentation on branch ${newBranchName}`
       const { data: newCommit } = await octokitClient.git.createCommit({
         owner,
         repo: repoName,
