@@ -7,7 +7,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(express.json());
 
-app.post("/webhook", commentOnIssue);
+app.post("/webhook", RouteWebhookRequest);
 
 app.get("/", (req, res) => {
   return res.json({ msg: "AM HERE!" });
