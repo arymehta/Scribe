@@ -9,7 +9,7 @@ export const parseDirectory = async (octokitClient, owner, repoName, path) => {
     path: path,
   });
   const allFiles = response?.data;
-  if (!Array.isArray(allFiles)) {
+  if (!Array.isArray(allFiles) || allFiles.length == 0) {
     console.log("The path is not a directory");
     throw new Error("The path is not a directory");
   }
@@ -49,7 +49,6 @@ export const getMarkdownContent = async (octokitClient, owner, repoName, path = 
   try {
     const results = await parseDirectory(octokitClient, owner, repoName, path);
     const finalBody = await parseFileContents(results);
-    // console.log("The final Body = ", finalBody);
     const llmOutput = await llmResponse(finalBody);
     const finalAnswer = parseMarkdown(llmOutput);
     return finalAnswer;
