@@ -21,4 +21,3 @@ export const createOctokitClient = (installationId) => {
 
   return octokit;
 };
-// createOctokitClient();
