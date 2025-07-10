@@ -48,7 +48,7 @@ export const creatingNewBranch = async (octokitClient, owner, repoName, newBranc
 // Create Document to be committed
 // TODO: create a separate function to populate docContent where there is an AI call
 
-export const createDocument = async (octokitClient, owner, repoName, docContent) => {
+export const createDocument = async (octokitClient, owner, repoName, docContent = "Default value") => {
   try {
     console.log("Creating Document ");
     // Default value for testing
@@ -61,6 +61,7 @@ export const createDocument = async (octokitClient, owner, repoName, docContent)
     });
     return blobData;
   } catch (error) {
+    // console.error(error);
     console.log("Error Creating Blob");
   }
 };

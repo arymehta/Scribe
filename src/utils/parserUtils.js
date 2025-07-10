@@ -1,3 +1,5 @@
+import { llmResponse } from "../utils/llmUtils.js";
+
 export const parseDirectory = async (octokitClient, owner, repoName, path) => {
   console.log("Parsing Directory here");
   const results = [];
@@ -41,4 +43,18 @@ export const parseMarkdown = (markdownString) => {
     .replace(/^```markdown\s*/, "")
     .replace(/```$/, "")
     .trim();
+};
+
+export const getMarkdownContent = async (octokitClient, owner, repoName, path = "") => {
+  try {
+    const results = await parseDirectory(octokitClient, owner, repoName, path);
+    const finalBody = await parseFileContents(results);
+    // console.log("The final Body = ", finalBody);
+    const llmOutput = await llmResponse(finalBody);
+    const finalAnswer = parseMarkdown(llmOutput);
+    return finalAnswer;
+  } catch (error) {
+    console.log(error);
+    console.log("Error getting markdown content");
+  }
 };
