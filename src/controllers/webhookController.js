@@ -213,10 +213,11 @@ const createCommit = async (req, res, docContent) => {
 
       // Create a commit
       console.log("Commiting on that Tree");
+      const commitMessage = `Issue #${issueNumber} : Creating documentation on branch ${newBranchName}`
       const { data: newCommit } = await octokitClient.git.createCommit({
         owner,
         repo: repoName,
-        message: "Im commiting!",
+        message: commitMessage,
         tree: newTree?.sha,
         parents: [commitSha],
       });
@@ -231,7 +232,7 @@ const createCommit = async (req, res, docContent) => {
       });
 
       // Create a pull Request
-      await createPR(octokitClient, owner, repoName, issueNumber, newBranchName, baseBranch);
+      await createPR(octokitClient, owner, repoName, issueNumber, newBranchName, baseBranch, commitMessage);
     } catch (error) {
       console.log(error);
     }
