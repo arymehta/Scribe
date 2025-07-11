@@ -64,12 +64,18 @@ export const createDocument = async (octokitClient, owner, repoName, docContent 
   } catch (error) {
     // console.error(error);
     console.log("Error Creating Blob");
+    throw new Error("Error Creating DOcument: This may be a problem at our end!");
   }
 };
 
 // -- createTree followed by createCommit
 export const createTree = async (octokitClient, owner, repoName, newTreeSha, blobData, path) => {
   try {
+    if (path === "") {
+      path = "README.md";
+    } else {
+      path = `${path}/README.md`;
+    }
     console.log("Creating new Tree ");
     const { data: newTree } = await octokitClient.git.createTree({
       owner: owner,
@@ -77,7 +83,7 @@ export const createTree = async (octokitClient, owner, repoName, newTreeSha, blo
       base_tree: newTreeSha, // base is the latest commit's tree
       tree: [
         {
-          path: `${path}/README.md`,
+          path: path,
           mode: "100644",
           type: "blob",
           sha: blobData?.sha,
@@ -86,6 +92,7 @@ export const createTree = async (octokitClient, owner, repoName, newTreeSha, blo
     });
     return newTree;
   } catch (error) {
+    console.log(error);
     console.log("Error Creating Tree");
   }
 };
@@ -121,62 +128,56 @@ export const createPR = async (
 export const createCommit = async (req, octokitClient, docContent, path = "") => {
   console.log("Req recieved");
 
-  const event = req.headers["x-github-event"];
-  const action = req.body.action;
+  // const event = req?.headers["x-github-event"];
+  // const action = req?.body?.action;
 
-  if (event === "issues" && action === "opened") {
-    const issue = req?.body?.issue;
-    const repo = req?.body?.repository;
-    const owner = repo?.owner?.login;
-    const repoName = repo?.name;
-    const issueNumber = issue?.number;
+  const issue = req?.body?.issue;
+  const repo = req?.body?.repository;
+  const owner = repo?.owner?.login;
+  const repoName = repo?.name;
+  const issueNumber = issue?.number;
 
-    try {
-      // gets the base branch (main/ master)
-      const baseBranch = await getBaseBranch(octokitClient, owner, repoName);
+  // gets the base branch (main/ master)
+  const baseBranch = await getBaseBranch(octokitClient, owner, repoName);
 
-      // Getting the SHA of the last commit after which we want to commit
-      const commitSha = await getLatestCommitSHA(octokitClient, owner, repoName, baseBranch);
-      console.log("Commit SHA: ", commitSha);
+  // Getting the SHA of the last commit after which we want to commit
+  const commitSha = await getLatestCommitSHA(octokitClient, owner, repoName, baseBranch);
+  console.log("Commit SHA: ", commitSha);
 
-      // Creating a new branch off the current commit SHA
-      const newBranchName = `docbot/docs-${Date.now()}`;
-      const newTreeSha = await creatingNewBranch(octokitClient, owner, repoName, newBranchName, commitSha);
+  // Creating a new branch off the current commit SHA
+  const newBranchName = `docbot/docs-${Date.now()}`;
+  const newTreeSha = await creatingNewBranch(octokitClient, owner, repoName, newBranchName, commitSha);
 
-      // Create Document to be committed
-      // TODO: create a separate function for this where there is an AI call
-      // const docContent = await commentOnIssue(req, res);
-      const blobData = await createDocument(octokitClient, owner, repoName, docContent);
+  // Create Document to be committed
+  // TODO: create a separate function for this where there is an AI call
+  // const docContent = await commentOnIssue(req, res);
+  const blobData = await createDocument(octokitClient, owner, repoName, docContent);
 
-      // Create new tree(branch)
-      const newTree = await createTree(octokitClient, owner, repoName, newTreeSha, blobData, path);
+  // Create new tree(branch)
+  const newTree = await createTree(octokitClient, owner, repoName, newTreeSha, blobData, path);
 
-      // Create a commit
-      console.log("Commiting on that Tree");
-      const commitMessage = `Issue #${issueNumber} : Creating documentation on branch ${newBranchName}`;
-      const { data: newCommit } = await octokitClient.git.createCommit({
-        owner,
-        repo: repoName,
-        message: commitMessage,
-        tree: newTree?.sha,
-        parents: [commitSha],
-      });
+  // Create a commit
+  console.log("Commiting on that Tree");
+  const commitMessage = `Issue #${issueNumber} : Creating documentation on branch ${newBranchName}`;
+  const { data: newCommit } = await octokitClient.git.createCommit({
+    owner,
+    repo: repoName,
+    message: commitMessage,
+    tree: newTree?.sha,
+    parents: [commitSha],
+  });
 
-      // Update the head of the new branch to the katest commit
-      console.log("Updating the head of that branch to the new commit SHA ");
-      await octokitClient.git.updateRef({
-        owner,
-        repo: repoName,
-        ref: `heads/${newBranchName}`,
-        sha: newCommit?.sha,
-      });
+  // Update the head of the new branch to the katest commit
+  console.log("Updating the head of that branch to the new commit SHA ");
+  await octokitClient.git.updateRef({
+    owner,
+    repo: repoName,
+    ref: `heads/${newBranchName}`,
+    sha: newCommit?.sha,
+  });
 
-      // Create a pull Request
-      await createPR(octokitClient, owner, repoName, issueNumber, newBranchName, baseBranch, commitMessage);
-    } catch (error) {
-      console.log(error);
-    }
-  }
+  // Create a pull Request
+  await createPR(octokitClient, owner, repoName, issueNumber, newBranchName, baseBranch, commitMessage);
 };
 
 export const detectMergePR = async (req, octokitClient) => {
@@ -222,12 +223,27 @@ export const commentOnIssue = async (req, octokitClient, commentMessage = defaul
   const owner = repo?.owner?.login;
   const repoName = repo?.name;
   const issueNumber = issue?.number;
+
+  // Get original comment body to quote
+  const originalComment = req?.body?.comment?.body;
+  const author = req?.body?.comment?.user?.login;
+
+  // Quote original comment (if exists)
+  let quoted = "";
+  if (originalComment) {
+    const quotedLines = originalComment
+      .split("\n")
+      .map((line) => `> ${line}`)
+      .join("\n");
+    quoted = `@${author}:\n${quotedLines}\n\n`;
+  }
+
   try {
     await octokitClient.rest.issues.createComment({
       owner,
       repo: repoName,
       issue_number: issueNumber,
-      body: commentMessage,
+      body: `${quoted}${commentMessage}`,
     });
   } catch (error) {
     console.log(error);

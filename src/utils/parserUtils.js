@@ -3,16 +3,30 @@ import { llmResponse } from "../utils/llmUtils.js";
 export const parseDirectory = async (octokitClient, owner, repoName, path) => {
   console.log("Parsing Directory here");
   const results = [];
-  const response = await octokitClient.rest.repos.getContent({
-    owner,
-    repo: repoName,
-    path: path,
-  });
+  let response;
+
+  try {
+    response = await octokitClient.rest.repos.getContent({
+      owner,
+      repo: repoName,
+      path,
+    });
+  } catch (err) {
+    // Handle invalid path or repo errors
+    if (err.status === 404) {
+      throw new Error("This directory does not exist! Please enter a valid directory");
+    }
+    throw err; // rethrow other errors
+  }
+
   const allFiles = response?.data;
-  if (!Array.isArray(allFiles) || allFiles.length == 0) {
+
+  if (!Array.isArray(allFiles)) {
     console.log("The path is not a directory");
     throw new Error("The path is not a directory");
   }
+
+  // If it's a valid empty directory, return an empty array
   for (const file of allFiles) {
     if (file.type === "file") {
       const fileResponse = await octokitClient.rest.repos.getContent({
@@ -27,6 +41,7 @@ export const parseDirectory = async (octokitClient, owner, repoName, path) => {
       });
     }
   }
+
   return results;
 };
 
@@ -46,14 +61,9 @@ export const parseMarkdown = (markdownString) => {
 };
 
 export const getMarkdownContent = async (octokitClient, owner, repoName, path = "") => {
-  try {
-    const results = await parseDirectory(octokitClient, owner, repoName, path);
-    const finalBody = await parseFileContents(results);
-    const llmOutput = await llmResponse(finalBody);
-    const finalAnswer = parseMarkdown(llmOutput);
-    return finalAnswer;
-  } catch (error) {
-    console.log(error);
-    console.log("Error getting markdown content");
-  }
+  const results = await parseDirectory(octokitClient, owner, repoName, path);
+  const finalBody = await parseFileContents(results);
+  const llmOutput = await llmResponse(finalBody);
+  const finalAnswer = parseMarkdown(llmOutput);
+  return finalAnswer;
 };

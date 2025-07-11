@@ -2,6 +2,8 @@ import { createOctokitClient } from "../appAuth.js";
 import { getMarkdownContent } from "../utils/parserUtils.js";
 import { commentOnIssue, detectMergePR, createCommit } from "../utils/githubUtils.js";
 
+export const botName = "@bot";
+
 export const RouteWebhookRequest = async (req, res) => {
   const event = req?.headers["x-github-event"];
   const action = req?.body?.action;
@@ -12,22 +14,25 @@ export const RouteWebhookRequest = async (req, res) => {
     const owner = repo?.owner?.login;
     const repoName = repo?.name;
 
-    if (event === "issues" && action === "opened") {
+    if ((event === "issues" && action === "opened") || (event === "issue_comment" && action === "created")) {
       const body = req.body.comment?.body?.trim() || req.body.issue?.body?.trim() || "";
-      if (!body.toLowerCase().startsWith("@bot")) {
+      if (!body.toLowerCase().startsWith(botName)) {
         return res.sendStatus(200);
       }
-      const match = body.match(/^@bot\s+(doc|fix|refactor|explain)\s+(.+)$/i);
+
+      const pattern = new RegExp(`^${botName}\\s+(doc|fix|refactor|explain)\\s+(.+)$`, "i");
+      const match = body.match(pattern);
+      // console.log(match)
       if (!match) {
         await commentOnIssue(
           req,
           octokitClient,
           `Invalid command format. Use one of the following:\n\n` +
             `\`\`\`\n` +
-            `@bot doc <path>\n` +
-            `@bot fix <path>\n` +
-            `@bot refactor <path>\n` +
-            `@bot explain <path>\n` +
+            `${botName} doc <path>\n` +
+            `${botName} fix <path>\n` +
+            `${botName}  refactor <path>\n` +
+            `${botName} explain <path>\n` +
             `\`\`\``
         );
         return res.status(401).json({ message: "Invalid " });
@@ -39,9 +44,17 @@ export const RouteWebhookRequest = async (req, res) => {
       switch (action) {
         case "doc":
           // default comment to acknowledge the user that the bot has started its work.
-          await commentOnIssue(req, octokitClient);
-          const docContent = await getMarkdownContent(octokitClient, owner, repoName, safePath);
-          await createCommit(req, octokitClient, docContent, safePath);
+          try {
+            const docContent = await getMarkdownContent(octokitClient, owner, repoName, safePath);
+            // const docContent = "#### Sample Content"
+            await commentOnIssue(req, octokitClient);
+            await createCommit(req, octokitClient, docContent, safePath);
+            await commentOnIssue(req, octokitClient, "Documentation created Successfully");
+            return res.status(200).json({ message: "PR Created! " });
+          } catch (error) {
+            const errMsg = error.message || "Bot ran into an Error";
+            await commentOnIssue(req, octokitClient, errMsg);
+          }
           break;
         default:
           return res.status(400).json({ message: "You have suffered Aura Loss" });
