@@ -1,6 +1,6 @@
 import { createOctokitClient } from "../appAuth.js";
 import { getMarkdownContent } from "../utils/parserUtils.js";
-import { commentOnIssue, detectMergePR, createCommit } from "../utils/githubUtils.js";
+import { commentOnIssue, detectMergePR, createCommit, checkPermissions } from "../utils/githubUtils.js";
 
 export const botName = "@bot";
 
@@ -15,6 +15,16 @@ export const RouteWebhookRequest = async (req, res) => {
     const repoName = repo?.name;
 
     if ((event === "issues" && action === "opened") || (event === "issue_comment" && action === "created")) {
+      const allowed = await checkPermissions(octokitClient, req);
+      if (!allowed) {
+        await commentOnIssue(
+          req,
+          octokitClient,
+          `Sorry, this request cannot be processed because you do not have sufficient permissions on this repository.
+Only users with write or admin access can request documentation generation with ${botName}.`
+        );
+        return res.status(400).json({ message: "You have suffered Aura Loss" });
+      }
       const body = req.body.comment?.body?.trim() || req.body.issue?.body?.trim() || "";
       if (!body.toLowerCase().startsWith(botName)) {
         return res.sendStatus(200);
@@ -45,9 +55,9 @@ export const RouteWebhookRequest = async (req, res) => {
         case "doc":
           // default comment to acknowledge the user that the bot has started its work.
           try {
+            await commentOnIssue(req, octokitClient);
             const docContent = await getMarkdownContent(octokitClient, owner, repoName, safePath);
             // const docContent = "#### Sample Content"
-            await commentOnIssue(req, octokitClient);
             await createCommit(req, octokitClient, docContent, safePath);
             await commentOnIssue(req, octokitClient, "Documentation created Successfully");
             return res.status(200).json({ message: "PR Created! " });

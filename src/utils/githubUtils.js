@@ -1,3 +1,5 @@
+import { botName } from "../controllers/webhookController.js";
+
 const defaultCommentMessage = "Hold on!, generating documentation...";
 
 // gets the base branch (main/ master)
@@ -64,7 +66,7 @@ export const createDocument = async (octokitClient, owner, repoName, docContent 
   } catch (error) {
     // console.error(error);
     console.log("Error Creating Blob");
-    throw new Error("Error Creating DOcument: This may be a problem at our end!");
+    throw new Error("Error Creating Document: This may be a problem at our end!");
   }
 };
 
@@ -247,5 +249,27 @@ export const commentOnIssue = async (req, octokitClient, commentMessage = defaul
     });
   } catch (error) {
     console.log(error);
+  }
+};
+
+export const checkPermissions = async (octokitClient, req) => {
+  try {
+    const repo = req?.body?.repository;
+    const owner = repo?.owner?.login;
+    const repoName = repo?.name;
+    const author = req?.body?.sender?.login;
+    const { data: permission } = await octokitClient.rest.repos.getCollaboratorPermissionLevel({
+      owner: owner,
+      repo: repoName,
+      username: author,
+    });
+    if (permission.permission !== "admin" && permission.permission !== "write") {
+      console.log(`@${author} does not have write access to this repository`);
+      return true;
+    }
+
+    return true;
+  } catch (error) {
+    console.log("Error checking Permission!");
   }
 };
