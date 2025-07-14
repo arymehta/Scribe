@@ -1,5 +1,3 @@
-import { botName } from "../controllers/webhookController.js";
-
 const defaultCommentMessage = "Hold on!, generating documentation...";
 
 // gets the base branch (main/ master)
@@ -258,14 +256,16 @@ export const checkPermissions = async (octokitClient, req) => {
     const owner = repo?.owner?.login;
     const repoName = repo?.name;
     const author = req?.body?.sender?.login;
+
     const { data: permission } = await octokitClient.rest.repos.getCollaboratorPermissionLevel({
       owner: owner,
       repo: repoName,
       username: author,
     });
+
     if (permission.permission !== "admin" && permission.permission !== "write") {
       console.log(`@${author} does not have write access to this repository`);
-      return true;
+      return false;
     }
 
     return true;
