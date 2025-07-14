@@ -10,7 +10,6 @@ export const initialArray = [
 
   // Java & JVM
   "*.java",
-  "*.scala",
 
   // C-family
   "*.c",
@@ -25,28 +24,23 @@ export const initialArray = [
   // Rust
   "*.rs",
 
-  // Ruby & Crystal
+  // Ruby
   "*.rb",
-  "*.cr",
 
   // PHP
   "*.php",
-  "*.phtml",
 
   // C#
   "*.cs",
 
   // Swift / Objective-C
   "*.swift",
-  "*.m",
-  "*.mm",
 
   // Dart
   "*.dart",
 
   // SQL / DB scripts
   "*.sql",
-  "*.psql",
   "*.pgsql",
 
   // Template Engines
@@ -55,19 +49,24 @@ export const initialArray = [
 
   // Web logic
   "*.vue",
-  "*.svelte",
 
   // Misc
   "*.make",
   "Makefile",
   "Dockerfile",
-  "build.gradle",
-  "Cargo.toml",
   "pyproject.toml",
+
+  "!.botignore",
 ];
 
+export const updateIncludeList = async (req, octokitClient) => {
+  const botIncludeArray = await getIncludeList(req, octokitClient);
+  const finalAnswer = [...initialArray, ...botIncludeArray];
+  return finalAnswer;
+};
+
 const getIncludeList = async (req, octokitClient) => {
-  console.log("Reading .botignore");
+  console.log("Reading .botinclude");
   try {
     const repo = req?.body?.repository;
     const owner = repo?.owner?.login;
@@ -78,17 +77,14 @@ const getIncludeList = async (req, octokitClient) => {
       path: ".botinclude",
       ref: await getBaseBranch(octokitClient, owner, repoName),
     });
-    const content = Buffer.from(response.data.content, "base64").toString("utf-8").split("\n");
-    return content;
+
+    const content = Buffer.from(response.data.content, "base64").toString("utf-8");
+    return content
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#"));
   } catch (err) {
-    
     console.log(err);
     return [];
   }
-};
-
-export const updateIncludeList = async (req, octokitClient) => {
-  const botIncludeArray = await getIncludeList(req, octokitClient);
-  const finalAnswer = [...initialArray, ...botIncludeArray];
-  return finalAnswer;
 };
