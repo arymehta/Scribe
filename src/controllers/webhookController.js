@@ -74,8 +74,7 @@ const generateDocumentation = async (req, octokitClient, owner, repoName, safePa
   const docContent = await getMarkdownContent(req, octokitClient, owner, repoName, safePath);
   // const docContent = "#### Sample Content" // TESTING
   // Creating a Commit
-  console.log("Doc Content: ", docContent);
-  // await createCommit(req, octokitClient, docContent, safePath);
+  await createCommit(req, octokitClient, docContent, safePath);
   // Notifying the user that its completed
   await commentOnIssue(req, octokitClient, generationSuccess);
 };
