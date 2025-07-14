@@ -267,8 +267,8 @@ export const checkPermissions = async (req, octokitClient) => {
       console.log(`@${author} does not have write access to this repository`);
       return false;
     }
-
-    return true;
+    console.log(`@${author} does not have write access to this repository`);
+    return false;
   } catch (error) {
     console.log("Error checking Permission!");
   }

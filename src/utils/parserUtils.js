@@ -1,3 +1,4 @@
+import { minimatch } from "minimatch";
 import { llmResponse } from "../services/llmService.js";
 import { createOctokitClient } from "../appAuth.js";
 import { updateIncludeList } from "./includeList.js";
@@ -48,22 +49,23 @@ export const parseDirectory = async (octokitClient, owner, repoName, path, inclu
 };
 
 const shouldIncludeFile = (fileName, includeList) => {
+  let included = false;
+  for (const pattern of includeList) {
+    const trimmed = pattern.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue; // skip empty lines & comments
     
-    return includeList?.some((entry) => {
-        if (entry.startsWith("*.")) {
-            // Match by file extension
-            const ext = entry.slice(2); // "*.js" → "js"
-            const hasExtension = fileName.endsWith(`.${ext}`);
-
-            return hasExtension;
-        } else {
-            // Exact file name match
-            const exactMatch = fileName === entry;
-            // console.log(`Exact match: ${fileName} === ${entry}? ${exactMatch}`);
-            return exactMatch;
-        }
-    });
+    const isNegation = trimmed.startsWith("!");
+    const cleanPattern = isNegation ? trimmed.slice(1) : trimmed;
+    
+    if (minimatch(fileName, cleanPattern)) {
+      included = !isNegation;
+    }
+  }
+  console.log(`Checking file ${fileName} → ${included ? "INCLUDED" : "SKIPPED"}`);
+  return included;
 };
+
+
 
 export const parseFileContents = async (fileContent) => {
   let finalOutput = "";
@@ -84,8 +86,6 @@ export const getMarkdownContent = async (req, octokitClient, owner, repoName, pa
   const finalIncludeList = await updateIncludeList(req, octokitClient);
   const results = await parseDirectory(octokitClient, owner, repoName, path, finalIncludeList);
   const finalBody = await parseFileContents(results);
-
-  
   const llmOutput = await llmResponse(finalBody);
   const finalAnswer = parseMarkdown(llmOutput);
   return finalAnswer;
