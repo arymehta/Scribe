@@ -250,7 +250,7 @@ export const commentOnIssue = async (req, octokitClient, commentMessage = defaul
   }
 };
 
-export const checkPermissions = async (octokitClient, req) => {
+export const checkPermissions = async (req, octokitClient) => {
   try {
     const repo = req?.body?.repository;
     const owner = repo?.owner?.login;

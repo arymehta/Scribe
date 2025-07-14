@@ -1,5 +1,6 @@
 import { llmResponse } from "../services/llmService.js";
 import { shouldIgnoreFile } from "./ignoreList.js";
+import { createOctokitClient } from "../appAuth.js";
 
 export const parseDirectory = async (octokitClient, owner, repoName, path) => {
   console.log("Parsing Directory here");
@@ -67,4 +68,14 @@ export const getMarkdownContent = async (octokitClient, owner, repoName, path = 
   const llmOutput = await llmResponse(finalBody);
   const finalAnswer = parseMarkdown(llmOutput);
   return finalAnswer;
+};
+
+export const parseRequest = (req) => {
+  const installationId = req?.body?.installation?.id;
+  const octokitClient = createOctokitClient(installationId);
+  const repo = req?.body?.repository;
+  const owner = repo?.owner?.login;
+  const repoName = repo?.name;
+  const author = req?.body?.sender?.login;
+  return { octokitClient, owner, repoName, author };
 };
