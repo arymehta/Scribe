@@ -1,8 +1,8 @@
 import { createOctokitClient } from "../appAuth.js";
 import { getMarkdownContent } from "../utils/parserUtils.js";
 import { commentOnIssue, detectMergePR, createCommit, checkPermissions } from "../utils/githubUtils.js";
-const APP_NAME = process.env.APP_NAME;
-export const botName = "@bot";
+import { botName, APP_NAME, invalidCommandFormat, invalidPermissions, generationSuccess } from "../constants/comments.js";
+import { checkCommandFormat, formatPath } from "../helpers/helpers.js";
 
 export const RouteWebhookRequest = async (req, res) => {
   const event = req?.headers["x-github-event"];
@@ -22,32 +22,25 @@ export const RouteWebhookRequest = async (req, res) => {
     }
 
     if ((event === "issues" && action === "opened") || (event === "issue_comment" && action === "created")) {
-      const body = req.body.comment?.body?.trim() || req.body.issue?.body?.trim() || "";
-      if (!body.toLowerCase().startsWith(botName)) {
+      const issueBody = req.body.comment?.body?.trim() || req.body.issue?.body?.trim() || "";
+
+      // Ignore normal comments not mentioning the bot
+      if (!issueBody.toLowerCase().startsWith(botName)) {
         return res.sendStatus(200);
       }
 
-      const pattern = new RegExp(`^${botName}\\s+(doc|fix|refactor|explain)\\s+(.+)$`, "i");
-      const match = body.match(pattern);
-
+      const match = checkCommandFormat(issueBody)
+      
       if (!match) {
         await commentOnIssue(
           req,
           octokitClient,
-          `Invalid command format. Use one of the following:\n\n` +
-            `\`\`\`\n` +
-            `${botName} doc <path>\n` +
-            `${botName} fix <path>\n` +
-            `${botName}  refactor <path>\n` +
-            `${botName} explain <path>\n` +
-            `\`\`\``
+          invalidCommandFormat
         );
         return res.status(401).json({ message: "Invalid " });
       }
-      const action = match[1].toLowerCase();
-      const path = match[2];
-      const safePath = path.replace(/^\/+|^\.\/*|\/+$/g, "");
-      console.log(safePath);
+
+      const [action,safePath] = formatPath(match);
       switch (action) {
         case "doc":
           try {
@@ -56,8 +49,7 @@ export const RouteWebhookRequest = async (req, res) => {
               await commentOnIssue(
                 req,
                 octokitClient,
-                `Sorry, this request cannot be processed because you do not have sufficient permissions on this repository.
-                Only users with write or admin access can request documentation generation with ${botName}.`
+                invalidPermissions
               );
               return res.status(400).json({ message: "You have suffered Aura Loss" });
             } else {
@@ -71,7 +63,7 @@ export const RouteWebhookRequest = async (req, res) => {
               // Creating a Commit
               await createCommit(req, octokitClient, docContent, safePath);
               // Notifying the user that its completed
-              await commentOnIssue(req, octokitClient, "Documentation created Successfully");
+              await commentOnIssue(req, octokitClient, generationSuccess);
               return res.status(200).json({ message: "PR Created! " });
             }
           } catch (error) {

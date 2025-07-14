@@ -1,4 +1,4 @@
-import { llmResponse } from "../utils/llmUtils.js";
+import { llmResponse } from "../services/llmService.js";
 
 export const parseDirectory = async (octokitClient, owner, repoName, path) => {
   console.log("Parsing Directory here");
