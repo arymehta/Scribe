@@ -1,136 +1,94 @@
-import { getBaseBranch } from "./githubUtils";
+import { getBaseBranch } from "./githubUtils.js";
 
 export const initialArray = [
   // JavaScript / TypeScript
-  ".js",
-  ".jsx",
-  ".ts",
-  ".tsx",
+  "*.js",
+  "*.ts",
 
   // Python
-  ".py",
+  "*.py",
 
   // Java & JVM
-  ".java",
-  ".kt",
-  ".kts",
-  ".scala",
-  ".groovy",
+  "*.java",
+  "*.scala",
 
   // C-family
-  ".c",
-  ".cpp",
-  ".cc",
-  ".h",
-  ".hpp",
-  ".hxx",
-  ".cxx",
+  "*.c",
+  "*.cpp",
+  "*.cc",
+  "*.h",
+  "*.hpp",
 
   // Go
-  ".go",
+  "*.go",
 
   // Rust
-  ".rs",
+  "*.rs",
 
   // Ruby & Crystal
-  ".rb",
-  ".cr",
+  "*.rb",
+  "*.cr",
 
   // PHP
-  ".php",
-  ".phtml",
+  "*.php",
+  "*.phtml",
 
   // C#
-  ".cs",
+  "*.cs",
 
   // Swift / Objective-C
-  ".swift",
-  ".m",
-  ".mm",
+  "*.swift",
+  "*.m",
+  "*.mm",
 
   // Dart
-  ".dart",
-
-  // Haskell & functional
-  ".hs",
-  ".lhs",
-  ".ml",
-  ".mli",
-  ".clj",
-  ".cljs",
-  ".fs",
-  ".fsi",
-  ".ex",
-  ".exs",
-
-  // Shell / Bash / CLI
-  ".sh",
-  ".bash",
-  ".zsh",
-  ".fish",
+  "*.dart",
 
   // SQL / DB scripts
-  ".sql",
-  ".psql",
-  ".pgsql",
+  "*.sql",
+  "*.psql",
+  "*.pgsql",
 
   // Template Engines
-  ".ejs",
-  ".hbs",
-  ".pug",
-  ".mustache",
-  ".twig",
-  ".njk",
-  ".liquid",
+  "*.ejs",
+  "*.hbs",
 
   // Web logic
-  ".vue",
-  ".svelte",
-
-  // Infrastructure as Code
-  ".tf",
-  ".tfvars",
-  ".cue",
+  "*.vue",
+  "*.svelte",
 
   // Misc
-  ".make",
-  ".mk",
-  ".nix",
-  ".re",
-  ".res",
-  ".elm",
+  "*.make",
   "Makefile",
   "Dockerfile",
-  "Procfile",
-  "Jenkinsfile",
-  "Vagrantfile",
   "build.gradle",
-  "gradle.kts",
   "Cargo.toml",
   "pyproject.toml",
-  "justfile",
-  "Rakefile",
-  "mix.exs",
-  "Dune",
 ];
+
+const getIncludeList = async (req, octokitClient) => {
+  console.log("Reading .botignore");
+  try {
+    const repo = req?.body?.repository;
+    const owner = repo?.owner?.login;
+    const repoName = repo?.name;
+    const response = await octokitClient.rest.repos.getContent({
+      owner: owner,
+      repo: repoName,
+      path: ".botinclude",
+      ref: await getBaseBranch(octokitClient, owner, repoName),
+    });
+    const content = Buffer.from(response.data.content, "base64").toString("utf-8").split("\n");
+    return content;
+  } catch (err) {
+    
+    console.log(err);
+    return [];
+  }
+};
 
 export const updateIncludeList = async (req, octokitClient) => {
   const botIncludeArray = await getIncludeList(req, octokitClient);
   const finalAnswer = [...initialArray, ...botIncludeArray];
   return finalAnswer;
-};
-
-export const getIncludeList = async (req, octokitClient) => {
-  try {
-    const response = await octokitClient.rest.repos.getContent({
-      owner,
-      repo: repoName,
-      path: ".botinclude",
-      ref: await getBaseBranch(octokitClient, req?.owner?.login, req?.body?.repository?.name),
-    });
-    const finalAnswer = response?.split("\n");
-    return finalAnswer;
-  } catch (err) {
-    return [];
-  }
 };
