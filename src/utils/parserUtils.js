@@ -1,21 +1,21 @@
 import { llmResponse } from "../services/llmService.js";
-import { shouldIgnoreFile } from "./ignoreList.js";
 import { createOctokitClient } from "../appAuth.js";
+import { updateIncludeList } from "./includeList.js";
 
-export const parseDirectory = async (octokitClient, owner, repoName, path) => {
+export const parseDirectory = async (octokitClient, owner, repoName, path, includeList) => {
   console.log("Parsing Directory here");
   const results = [];
   let response;
 
   try {
-    response = await octokitClient.rest.repos.getContent({
+    response = await octokitClient?.rest?.repos?.getContent({
       owner,
       repo: repoName,
       path,
     });
   } catch (err) {
     // Handle invalid path or repo errors
-    if (err.status === 404) {
+    if (err?.status === 404) {
       throw new Error("This directory does not exist! Please enter a valid directory");
     }
     throw err; // rethrow other errors
@@ -30,13 +30,13 @@ export const parseDirectory = async (octokitClient, owner, repoName, path) => {
 
   // If it's a valid empty directory, return an empty array
   for (const file of allFiles) {
-    if (file.type === "file" && !shouldIgnoreFile(file?.name)) {
-      const fileResponse = await octokitClient.rest.repos.getContent({
+    if (file.type === "file" && shouldIncludeFile(file?.name, includeList)) {
+      const fileResponse = await octokitClient?.rest?.repos?.getContent({
         owner,
         repo: repoName,
         path: file?.path,
       });
-      const content = Buffer.from(fileResponse.data.content, "base64").toString("utf-8");
+      const content = Buffer?.from(fileResponse?.data?.content, "base64").toString("utf-8");
       results.push({
         fileName: file?.name,
         content,
@@ -47,10 +47,28 @@ export const parseDirectory = async (octokitClient, owner, repoName, path) => {
   return results;
 };
 
+const shouldIncludeFile = (fileName, includeList) => {
+    
+    return includeList?.some((entry) => {
+        if (entry.startsWith("*.")) {
+            // Match by file extension
+            const ext = entry.slice(2); // "*.js" → "js"
+            const hasExtension = fileName.endsWith(`.${ext}`);
+
+            return hasExtension;
+        } else {
+            // Exact file name match
+            const exactMatch = fileName === entry;
+            // console.log(`Exact match: ${fileName} === ${entry}? ${exactMatch}`);
+            return exactMatch;
+        }
+    });
+};
+
 export const parseFileContents = async (fileContent) => {
   let finalOutput = "";
   for (const content of fileContent) {
-    finalOutput += `File Name - ${content.fileName}\n\nFile Content - ${content.content}\n\n`;
+    finalOutput += `File Name - ${content?.fileName}\n\nFile Content -\n ${content?.content}\n\n`;
   }
   return finalOutput;
 };
@@ -62,9 +80,12 @@ export const parseMarkdown = (markdownString) => {
     .trim();
 };
 
-export const getMarkdownContent = async (octokitClient, owner, repoName, path = "") => {
-  const results = await parseDirectory(octokitClient, owner, repoName, path);
+export const getMarkdownContent = async (req, octokitClient, owner, repoName, path = "") => {
+  const finalIncludeList = await updateIncludeList(req, octokitClient);
+  const results = await parseDirectory(octokitClient, owner, repoName, path, finalIncludeList);
   const finalBody = await parseFileContents(results);
+
+  
   const llmOutput = await llmResponse(finalBody);
   const finalAnswer = parseMarkdown(llmOutput);
   return finalAnswer;

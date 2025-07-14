@@ -22,7 +22,7 @@ export const RouteWebhookRequest = async (req, res) => {
     }
 
     if ((event === "issues" && action === "opened") || (event === "issue_comment" && action === "created")) {
-      const issueBody = req.body.comment?.body?.trim() || req.body.issue?.body?.trim() || "";
+      const issueBody = req?.body?.comment?.body?.trim() || req?.body?.issue?.body?.trim() || "";
 
       // Ignore normal comments not mentioning the bot
       if (!issueBody.toLowerCase().startsWith(botName)) {
@@ -71,8 +71,7 @@ const generateDocumentation = async (req, octokitClient, owner, repoName, safePa
   await commentOnIssue(req, octokitClient);
 
   // get documentation content from LLM call
-  const docContent = await getMarkdownContent(octokitClient, owner, repoName, safePath);
-
+  const docContent = await getMarkdownContent(req, octokitClient, owner, repoName, safePath);
   // const docContent = "#### Sample Content" // TESTING
   // Creating a Commit
   await createCommit(req, octokitClient, docContent, safePath);
