@@ -53,6 +53,8 @@ const shouldIncludeFile = (fileName, includeList) => {
         if (entry.startsWith("*.")) {
             // Match by file extension
             const ext = entry.slice(2); // "*.js" → "js"
+            const hasExtension = fileName.endsWith(`.${ext}`);
+
             return hasExtension;
         } else {
             // Exact file name match
