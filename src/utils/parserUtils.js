@@ -1,4 +1,5 @@
 import { llmResponse } from "../utils/llmUtils.js";
+import { shouldIgnoreFile } from "./ignoreList.js";
 
 export const parseDirectory = async (octokitClient, owner, repoName, path) => {
   console.log("Parsing Directory here");
@@ -28,7 +29,7 @@ export const parseDirectory = async (octokitClient, owner, repoName, path) => {
 
   // If it's a valid empty directory, return an empty array
   for (const file of allFiles) {
-    if (file.type === "file") {
+    if (file.type === "file" && !shouldIgnoreFile(file?.name)) {
       const fileResponse = await octokitClient.rest.repos.getContent({
         owner,
         repo: repoName,

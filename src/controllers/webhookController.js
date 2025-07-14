@@ -46,7 +46,6 @@ export const RouteWebhookRequest = async (req, res) => {
           // default comment to acknowledge the user that the bot has started its work.
           try {
             const docContent = await getMarkdownContent(octokitClient, owner, repoName, safePath);
-            // const docContent = "#### Sample Content"
             await commentOnIssue(req, octokitClient);
             await createCommit(req, octokitClient, docContent, safePath);
             await commentOnIssue(req, octokitClient, "Documentation created Successfully");
