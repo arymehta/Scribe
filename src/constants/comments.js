@@ -1,5 +1,4 @@
-export const botName = "@bot";
-export const APP_NAME = process.env.APP_NAME;
+import { botName } from "./botNames.js";
 export const invalidCommandFormat =
   `Invalid command format. Use one of the following:\n\n` +
   `\`\`\`\n` +
@@ -8,7 +7,6 @@ export const invalidCommandFormat =
   `${botName}  refactor <path>\n` +
   `${botName} explain <path>\n` +
   `\`\`\``;
-
 
 export const invalidPermissions = `Sorry, this request cannot be processed because you do not have sufficient permissions on this repository. 
 Only users with write or admin access can request documentation generation with ${botName}.`;

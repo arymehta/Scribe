@@ -1,12 +1,7 @@
 import { getMarkdownContent, parseRequest } from "../utils/parserUtils.js";
 import { commentOnIssue, detectMergePR, createCommit, checkPermissions } from "../utils/githubUtils.js";
-import {
-  botName,
-  APP_NAME,
-  invalidCommandFormat,
-  invalidPermissions,
-  generationSuccess,
-} from "../constants/comments.js";
+import { invalidCommandFormat, invalidPermissions, generationSuccess } from "../constants/comments.js";
+import { botName, APP_NAME } from "../constants/botNames.js";
 import { checkCommandFormat, formatPath } from "../helpers/helpers.js";
 
 export const RouteWebhookRequest = async (req, res) => {
