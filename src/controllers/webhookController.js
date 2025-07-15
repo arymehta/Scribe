@@ -64,10 +64,8 @@ export const RouteWebhookRequest = async (req, res) => {
 const generateDocumentation = async (req, octokitClient, owner, repoName, safePath) => {
   // default comment to acknowledge the user that the bot has started its work.
   await commentOnIssue(req, octokitClient);
-
   // get documentation content from LLM call
   const docContent = await getMarkdownContent(req, octokitClient, owner, repoName, safePath);
-  // const docContent = "#### Sample Content" // TESTING
   // Creating a Commit
   await createCommit(req, octokitClient, docContent, safePath);
   // Notifying the user that its completed
