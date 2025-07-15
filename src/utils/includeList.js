@@ -1,5 +1,5 @@
 import { getBaseBranch } from "./githubUtils.js";
-
+import { botConfigFile } from "../constants/botNames.js";
 export const initialArray = [
   // JavaScript / TypeScript
   "*.js",
@@ -66,7 +66,7 @@ export const updateIncludeList = async (req, octokitClient) => {
 };
 
 const getIncludeList = async (req, octokitClient) => {
-  console.log("Reading .botinclude");
+  console.log(`Reading ${botConfigFile}`);
   try {
     const repo = req?.body?.repository;
     const owner = repo?.owner?.login;
@@ -74,7 +74,7 @@ const getIncludeList = async (req, octokitClient) => {
     const response = await octokitClient.rest.repos.getContent({
       owner: owner,
       repo: repoName,
-      path: ".botinclude",
+      path: botConfigFile,
       ref: await getBaseBranch(octokitClient, owner, repoName),
     });
 
@@ -84,7 +84,7 @@ const getIncludeList = async (req, octokitClient) => {
       .map((line) => line.trim())
       .filter((line) => line && !line.startsWith("#"));
   } catch (err) {
-    console.log(err);
+    console.log(`No ${botConfigFile} found! Sticking to defaults`);
     return [];
   }
 };
