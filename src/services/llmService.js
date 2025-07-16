@@ -11,6 +11,10 @@ export const llmResponse = async (llm_input) => {
     contents: wrapperString,
     config: {
       systemInstruction: SystemPrompt,
+      thinkingConfig: {
+        thinkingBudget: 0,
+        includeThoughts: false,
+      },
     },
   });
 
