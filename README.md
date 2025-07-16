@@ -1,10 +1,10 @@
 # Scribe ✒️
 
-Dont you just **hate** writing documentation? Wouldnt you rather jump into the exciting bit - writing code instead of spending precious time at your job or in a hackathon writing that README.md? We sure felt that way!
+Don't you just **hate** writing documentation? Wouldn't you rather jump into the exciting bit - writing code instead of spending precious time at your job or in a hackathon writing that README.md? We sure felt that way!
 
 This is why we decided to create: *Scribe*
 
-#### Scribe -- is an easy to use github integration that automates documentation! 
+#### Scribe -- is an easy-to-use GitHub integration that automates documentation! 
 
 ## Steps to use Scribe:
 1)  Go to the application page for scribe: ```https://github.com/apps/scribedoc```
@@ -14,18 +14,18 @@ This is why we decided to create: *Scribe*
 ```
 @scribe doc <directory_path>
 ```
-5) Watch as scribe gets to work!
+5) Watch as the scribe gets to work!
 
 (As a demo, check the [issues](https://github.com/arymehta/Scribe/issues/16) and documentation of Scribe itself [here](https://github.com/arymehta/Scribe/tree/main/src/utils), and [here](https://github.com/arymehta/Scribe/tree/main/src/controllers))
 
 ## Features
 - Processes files *directory wise* for the following reasons:
-    - Larger, more complex projects generally have directory specific documentation to prevent clutter 
-- Creates and makes all its *changes on a separate branch* .
+    - Larger, more complex projects generally have directory-specific documentation to prevent clutter 
+- Creates and makes all its *changes on a separate branch*.
 - Once done, commits on the branch at the *specified directory* and *opens a PR* (you can easily edit the contents before merging)
 - Detects when a @docbot PR is closed and *deletes the extra branch*
 - *Notifies the invoker* in a comment when the process is finished
-- Only users with *proper write priviledges* can invoke scribe (This prevents any random user raising a request for documentation leading to wastefull requests)
+- Only users with *proper write privileges* can invoke scribe (This prevents any random user from raising a request for documentation, leading to wasteful requests)
 - And -- * our favorite feature yet * -- the *".botconfig"* file. More on that later.
 
 ### NOTE
@@ -36,7 +36,7 @@ The bot **will not** mess with any user-owned branches or non-invoking comments
 1. Users can add a .botconfig file in the home directory of the repo to further customize the fiels to be included in the documentation.
 2. This was inspired by git's .gitignore
 
-Scribe's code has a list of default extentions that we thought should always be INCLUDED in documentation
+Scribe's code has a list of default extensions that we thought should always be INCLUDED in documentation
 
 [(click here for the full list)](https://github.com/arymehta/Scribe/blob/main/src/utils/includeList.js)
 ```js
@@ -52,25 +52,24 @@ export const initialArray = [
   "*.java",
   ...
 ```
-However, if you decide that you want .html files as well... then create the .botconfig file in ```/``` and add: 
+However, if you decide that you want ```.html``` files as well... then create the ```.botconfig``` file in ```/``` and add: 
 
-.botconfig
 ```
 *.html
 ```
-Thus, all files with html extension will be included
+Thus, all files with ```html``` extension will be included
 
 This works for specific file names as well -- 
 ```
 Makefile
 App.tsx
 ```
-Will include those specific filenames aswell
+Will include those specific filenames.
 
-This is really powerful as we can chain these together as well.
-For example, if i want to EXclude all .jsx files (because frontend tends to get very large), but want to INCLUDE only App.jsx (for the route information) i can...
+This is particularly powerful, as we can also chain these together.
+For example, if i want to EXclude all .jsx files (because frontend tends to get very large without much core logic), but want to INCLUDE only App.jsx (for the route information) i can...
 ```
-!.jsx
+!*.jsx
 App.jsx
 ```
 Much like .gitignore, it follows a top-down approach, meaning all ```.jsx``` files will be ignored, but ```App.jsx``` will be included in document generation.
@@ -78,7 +77,7 @@ Much like .gitignore, it follows a top-down approach, meaning all ```.jsx``` fil
 Conversely: 
 ```
 App.jsx
-!.jsx
+!*.jsx
 ```
 
 Here ```!.jsx```(exclude all jsx) overwrites the ```App.jsx``` (include App.jsx) and so all ```.jsx``` files are excuded.
@@ -93,7 +92,7 @@ The .botconfig will also override the default contents
 ```
 !*.py
 ```
-will exclude all python files even if they are included by default
+will exclude all Python files, even if they are included by default
 
 This allows the user to have complete controll over what goes for document generation and what dosent. We hope this provides the user with enough flexibility and controll over the bot functions!
 
@@ -139,8 +138,6 @@ git push origin feature/your-feature-name
 
 - Describe your PR clearly — mention what you changed, why you did it, and any issues it closes.
 
-- Any Improvements in UI/UX or color-schemes are encouraged as designing is not our forte.
-
 ## 💡 Tips for Contributing
 
 - Make sure your code follows the project's coding standards.
@@ -163,12 +160,12 @@ here are some of the areas we intend on improving for you to get started...
     @scribe <action> <path>
 ```
 
-- However the above approach is limited to a sub-directory simply because LLM larger token size would mean higher cost.
+- However, the above approach is limited to a sub-directory simply because LLM larger token size would mean higher cost.
 
-## In Future there are a few approaches, which we read about 
-- Clone the repo, creat a vector db for it and query. But cloning would mean that repo should be public so that looks like a limitation.
-- Another apporach would be to go through sub directories and document each of them individually. Then finally append all of them together to parent directory.
-- Third would be to keep docs for each sub dir seperate, a common practice in large code bases. (the route we took)
+## In Future, there are a few approaches, which we read about 
+- Clone the repo, create a vector db for it and query. But cloning would mean that repo should be public, so that looks like a limitation.
+- Another approach would be to go through subdirectories and document each of them individually. Then, finally, append all of them together to the parent directory.
+- Third would be to keep docs for each sub dir separate, a common practice in large code bases. (the route we took)
 
 
 Made by [Hardik Mutha](https://github.com/HardikMutha) and [Aryan Mehta](https://github.com/arymehta)
