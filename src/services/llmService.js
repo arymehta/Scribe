@@ -1,23 +1,18 @@
+import { GoogleGenAI } from "@google/genai";
 import { SystemPrompt } from "../prompts/issuePrompt.js";
-import OpenAI from "openai";
-const openai = new OpenAI({ apiKey: process.env.OPEN_AI_API_KEY });
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export const llmResponse = async (llm_input) => {
   const wrapperString = `The code is as follows - ${llm_input}.`;
-  const response = await openai.chat.completions.create({
-    model: process.env.OPEN_AI_MODEL,
-    messages: [
-      {
-        role: "system",
-        content: SystemPrompt,
-      },
-      {
-        role: "user",
-        content: wrapperString,
-      },
-    ],
-  });
-  const finalResponse = response.choices[0].message.content;
-  return finalResponse;
-};
 
+  const response = await ai.models.generateContent({
+    model: process.env.GEMINI_MODEL,
+    contents: wrapperString,
+    config: {
+      systemInstruction: SystemPrompt,
+    },
+  });
+
+  return response.text;
+};
