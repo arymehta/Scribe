@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@google/genai": "^1.9.0",
     "@octokit/app": "^16.0.1",
     "@octokit/auth-app": "^8.0.1",
     "@octokit/rest": "^22.0.0",
@@ -23,7 +24,6 @@
     "express": "^5.1.0",
     "minimatch": "^10.0.3",
     "nodemon": "^3.1.10",
-    "octokit": "^5.0.3",
-    "openai": "^5.8.3"
+    "octokit": "^5.0.3"
   }
 }
