@@ -104,11 +104,10 @@ We welcome contributions from the community! If you'd like to help improve this 
 
 1. **Fork this repository** and clone it locally:
 
-   \`\`\`bash
+   ```bash
    git clone https://github.com/YOUR_USERNAME/YOUR_FORK.git
    cd YOUR_FORK
-
-   \`\`\`
+   ```
 
 2. Follow the instructions above to run the project locally
 
@@ -116,23 +115,23 @@ We welcome contributions from the community! If you'd like to help improve this 
 
 - Create a new branch for your feature or bug fix:
 
-\`\`\`bash
+```bash
 git checkout -b feature/your-feature-name
-\`\`\`
+```
 
 - Make your changes and ensure everything works as expected.
 
 - Commit your changes with a clear message:
 
-\`\`\`bash
+```bash
 git commit -m "Add your message here"
-\`\`\`
+```
 
 - Push your branch to your fork:
 
-\`\`\`bash
+```bash
 git push origin feature/your-feature-name
-\`\`\`
+```
 
 - Open a Pull Request from your branch to the main branch of the original repository.
 
